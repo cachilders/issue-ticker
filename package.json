@@ -1,0 +1,23 @@
+{
+  "name": "tickerape",
+  "version": "0.0.1",
+  "description": "A service for printing Jira ticket status changes",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "lint": "eslint ./",
+    "lint-fix": "eslint ./ --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Casey Childers",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "dotenv": "^5.0.1",
+    "express": "^4.16.3",
+    "pg-promise": "^8.4.4"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1"
+  }
+}

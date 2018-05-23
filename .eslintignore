@@ -1,0 +1,7 @@
+build/*
+scripts/*
+config/*
+!config/db.js
+src/registerServiceWorker.js
+**/*-spec**
+**/*test**
