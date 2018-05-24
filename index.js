@@ -48,7 +48,7 @@ function fetchJiraIssues(prevIssues) {
             `INSERT INTO tickets(${all.join(', ')})
             VALUES(${all.map(makeVal).join(', ')})
             ON CONFLICT (id) DO UPDATE SET ${update.map(assignVal).join(', ')}
-            RETURNING id, ticket, updated`,
+            RETURNING *`,
           issue);
         });
         return t.batch(queries);
@@ -64,12 +64,14 @@ function fetchJiraIssues(prevIssues) {
           console.log('No changes');
         } else {
           lastUpdate = prevIssues[0] && new Date(prevIssues[0].updated);
-          // ramda difference is not working; need another approach
           drop = R.difference(prevIssues, nextIssues);
+          updated = nextIssues.filter(issue => recent(issue.updated));
           if (drop.length) {
             console.log('Freshly unassigned or closed: ', drop);
           }
-          console.log('Freshly updated: ', nextIssues.filter(issue => recent(issue.updated)))
+          if (updated.length) {
+            console.log('Freshly updated: ', updated);
+          }
         }
 
         setTimeout(fetchJiraIssues.bind(null, nextIssues), timeout);
