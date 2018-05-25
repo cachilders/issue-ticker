@@ -4,16 +4,16 @@ const bodyParser = require('body-parser');
 const db = require('./db');
 const express = require('express');
 const app = express();
-const http = require('http').Server(app);
 const R = require('ramda');
 const request = require('request');
-const timeout = 5 * 60 * 1000;
 const { JIRA_DOMAIN,
   JIRA_QUERY,
   JIRA_USERNAME,
   JIRA_PASSWORD,
   PORT
 } = process.env;
+const timeout = 60 * 1000;
+const port = PORT || 8080;
 
 app.use(bodyParser.json());
 
@@ -22,8 +22,31 @@ app.get('/api/fetch_issues', (req, res) => {
     .then(data => res.send(data))
     .catch(error => res.send(error));
 });
+
+const fetchStoredIssues = () => db.any(`SELECT * FROM tickets WHERE status <> 'NO TRACK' ORDER BY updated DESC`);
+const fetchStoredIssue = issue => db.one(`SELECT * FROM tickets WHERE id = $1 RETURNING *`, [issue.id]);
+const dropIssue = issue => db.none(`UPDATE tickets SET status = 'NO TRACK' WHERE id = $1`, [issue.id]);
+
+const recent = (itemUpdated, lastUpdated) => new Date(itemUpdated) > lastUpdated;
+const prettify = issue => JSON.stringify(issue, null, 2);
+
+const compareIssues = (prev, next) => {
+  const lastUpdated = prev[0] && new Date(prev[0].updated);
+  const makeReference = R.indexBy(R.prop('id'));
+  const prevReference = makeReference(prev);
+  const nextReference = makeReference(next);
+
+  const getLatest = issues => issues.filter(issue => recent(issue.updated, lastUpdated));
+  const persistant = issue => !!nextReference[issue.id];
+  const preexisting = issue => !!prevReference[issue.id];
+
+  const {0: updated, 1: added} = R.partition(preexisting, getLatest(next));
+  const dropped = R.reject(persistant, prev);
+  
+  return {added, dropped, updated}
+}
       
-function fetchJiraIssues(prevIssues) {
+const fetchJiraIssues = (prevIssues) => {
   const httpRequestOptions = {
     url: `https://${JIRA_DOMAIN}/rest/api/latest/search?jql=${encodeURIComponent(JIRA_QUERY)}`,
     auth: {
@@ -54,26 +77,13 @@ function fetchJiraIssues(prevIssues) {
         return t.batch(queries);
       })
       .then(nextIssues => {
-        const quantMatch = nextIssues.length === prevIssues.length;
-        const leftMatch = nextIssues[0] && nextIssues.id === prevIssues.id && nextIssues.updated === prevIssues.updated;
-        let add, drop, lastUpdate;
-        
-        function recent(updatedAt) { return new Date(updatedAt) > lastUpdate };
-
-        if (quantMatch && leftMatch) {
-          console.log('No changes');
-        } else {
-          lastUpdate = prevIssues[0] && new Date(prevIssues[0].updated);
-          drop = R.difference(prevIssues, nextIssues);
-          updated = nextIssues.filter(issue => recent(issue.updated));
-          if (drop.length) {
-            console.log('Freshly unassigned or closed: ', drop);
-          }
-          if (updated.length) {
-            console.log('Freshly updated: ', updated);
-          }
-        }
-
+        const {added, dropped, updated} = compareIssues(prevIssues, issues);
+        added.forEach(issue => console.log(`ASSIGNED: ${prettify(issue)}`));
+        updated.forEach(issue => console.log(`UPDATED: ${prettify(issue)}`));
+        dropped.forEach(issue => {
+          console.log(`UNASSIGNED: ${prettify(issue)}`);
+          dropIssue(issue);
+        });
         setTimeout(fetchJiraIssues.bind(null, nextIssues), timeout);
       })
       .catch(console.error);
@@ -115,11 +125,6 @@ function processIssue(issue) {
   };
 }
 
-function fetchStoredIssues() {
-  return db.any(`SELECT * FROM tickets ORDER BY updated DESC`);
-}
-
 fetchStoredIssues().then(fetchJiraIssues).catch(console.error)
 
-let port = PORT || 8080;
-http.listen(port, function(){});
+app.listen(port, function(){});
