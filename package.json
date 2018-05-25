@@ -1,5 +1,5 @@
 {
-  "name": "tickerape",
+  "name": "issue-ticker",
   "version": "0.0.1",
   "description": "A service for printing Jira ticket status changes",
   "main": "index.js",
