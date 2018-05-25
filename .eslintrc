@@ -16,7 +16,8 @@
 
   ],
   "globals": {
-    "process": true
+    "process": true,
+    "setTimeout": true
   },
   "rules": {
       "indent": [
@@ -26,10 +27,6 @@
       "linebreak-style": [
           "error",
           "unix"
-      ],
-      "quotes": [
-          "error",
-          "single"
       ],
       "semi": [
           "error",
