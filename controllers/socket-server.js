@@ -1,11 +1,13 @@
 const net = require('net');
 const Client = require('./socket-client');
-const { HOST, SOCKET_PORT } = process.env;
+const host = process.env.HOST || 'localhost';
+const { SOCKET_PORT: socketPort } = require('../config/constants');
 
 class Server {
   constructor() {
-    this.port = SOCKET_PORT || 5501;
-    this.host = HOST || 'localhost';
+    this.port = socketPort;
+    this.host = host;
+    // TODO: replace with something like WeakMap
     this.clients = [];
   }
 

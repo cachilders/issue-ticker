@@ -1,8 +1,8 @@
 const request = require('request');
 const {
-  allKeys,
-  persistentKeys,
-  timeout,
+  ALL_KEYS,
+  PERSISTENT_KEYS,
+  TIMEOUT,
 } = require('../config/constants');
 const {
   db,
@@ -42,8 +42,8 @@ const modelJiraIssues = (prevIssues) => {
       const issues = raw ? raw.map(processIssue) : [];
       transactions(t => {
         const queries = issues.map(issue => {
-          const all = allKeys;
-          const staticValues = persistentKeys;
+          const all = ALL_KEYS;
+          const staticValues = PERSISTENT_KEYS;
           const update = all.filter(prop => !staticValues.includes(prop));
           const makeVal = prop => `\${${prop}}`;
           const assignVal = prop => `${prop} = ${makeVal(prop)}`;
@@ -66,7 +66,7 @@ const modelJiraIssues = (prevIssues) => {
             dropIssue(issue);
           });
           // TODO: Repeat. Decouple this biz.
-          setTimeout(modelJiraIssues.bind(null, nextIssues), timeout);
+          setTimeout(modelJiraIssues.bind(null, nextIssues), TIMEOUT);
         })
         .catch(console.error);
     }
