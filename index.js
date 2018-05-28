@@ -3,15 +3,17 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const app = express();
 const api = require('./controllers/api');
-const { fetchStoredIssues } = require('./controllers/db');
-const { fetchJiraIssues } = require('./controllers/jira');
+const { modelJiraIssues, fetchStoredIssues } = require('./models/issues');
+const socketServer = require('./controllers/socket-server');
 const { PORT } = process.env;
 const port = PORT || 8080;
 
 app.use(bodyParser.json());
-
 app.use('/api', api);
+app.listen(port, () => {/* ¯\_(ツ)_/¯ */});
 
-fetchStoredIssues().then(fetchJiraIssues).catch(console.error)
 
-app.listen(port, function(){});
+socketServer.start(() => {
+  fetchStoredIssues().then(modelJiraIssues).catch(console.error);
+});
+

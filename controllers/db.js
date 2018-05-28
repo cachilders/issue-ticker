@@ -9,8 +9,6 @@ const db = pgp({
 });
 
 module.exports = {
-  dropIssue: issue => db.none(`UPDATE tickets SET status = 'NO TRACK' WHERE id = $1`, [issue.id]),
-  fetchStoredIssue: issue => db.one(`SELECT * FROM tickets WHERE id = $1 RETURNING *`, [issue.id]),
-  fetchStoredIssues: () => db.any(`SELECT * FROM tickets WHERE status <> 'NO TRACK' ORDER BY updated DESC`),
+  db,
   transactions: db.tx,
 };

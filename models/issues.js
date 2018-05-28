@@ -5,14 +5,15 @@ const {
   timeout,
 } = require('../config/constants');
 const {
-  dropIssue,
+  db,
   transactions,
-} = require('./db');
+} = require('../controllers/db');
 const {
   compareIssues,
   prettify,
 } = require('../helpers/issue-tools');
 const processIssue = require('../helpers/issue-mapper');
+const server = require('../controllers/socket-server');
 const {
   JIRA_DOMAIN,
   JIRA_QUERY,
@@ -21,7 +22,11 @@ const {
 } = process.env;
 
 
-const fetchJiraIssues = (prevIssues) => {
+const dropIssue = issue => db.none(`UPDATE tickets SET status = 'NO TRACK' WHERE id = $1`, [issue.id]);
+const fetchStoredIssue = issue => db.one(`SELECT * FROM tickets WHERE id = $1 RETURNING *`, [issue.id]);
+const fetchStoredIssues = () => db.any(`SELECT * FROM tickets WHERE status <> 'NO TRACK' ORDER BY updated DESC`);
+
+const modelJiraIssues = (prevIssues) => {
   const httpRequestOptions = {
     url: `https://${JIRA_DOMAIN}/rest/api/latest/search?jql=${encodeURIComponent(JIRA_QUERY)}`,
     auth: {
@@ -52,18 +57,24 @@ const fetchJiraIssues = (prevIssues) => {
         return t.batch(queries);
       })
         .then(nextIssues => {
+          // TODO: Decouple this biz into a more structured printer output view json
           const {added, dropped, updated} = compareIssues(prevIssues, issues);
-          added.forEach(issue => console.log(`ASSIGNED: ${prettify(issue)}`));
-          updated.forEach(issue => console.log(`UPDATED: ${prettify(issue)}`));
+          added.forEach(issue => server.broadcast(`ASSIGNED: ${prettify(issue)}`));
+          updated.forEach(issue => server.broadcast(`UPDATED: ${prettify(issue)}`));
           dropped.forEach(issue => {
-            console.log(`UNASSIGNED: ${prettify(issue)}`);
+            server.broadcast(`UNASSIGNED: ${prettify(issue)}`);
             dropIssue(issue);
           });
-          setTimeout(fetchJiraIssues.bind(null, nextIssues), timeout);
+          // TODO: Repeat. Decouple this biz.
+          setTimeout(modelJiraIssues.bind(null, nextIssues), timeout);
         })
         .catch(console.error);
     }
   });
 };
 
-module.exports = { fetchJiraIssues }
+module.exports = {
+  fetchStoredIssue,
+  fetchStoredIssues,
+  modelJiraIssues,
+};

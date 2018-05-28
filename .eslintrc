@@ -16,6 +16,7 @@
 
   ],
   "globals": {
+    "console": true,
     "process": true,
     "setTimeout": true
   },
@@ -28,6 +29,7 @@
           "error",
           "unix"
       ],
+      "no-console": 0,
       "semi": [
           "error",
           "always"

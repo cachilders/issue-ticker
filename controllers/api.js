@@ -1,4 +1,4 @@
-const { fetchStoredIssues } = require('./db');
+const { fetchStoredIssues } = require('../models/issues');
 const express = require('express');
 const router = express.Router();
 
