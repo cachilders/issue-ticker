@@ -33,7 +33,7 @@ class Server {
   }
 
   welcome(client) {
-    client.receiveMessage(`Connected to feed at ${new Date()}`);
+    client.receiveMessage(`\nConnected as ${client.name}\n\n`);
   }
 
   broadcast(message, clientSender) {
@@ -41,7 +41,7 @@ class Server {
       if (client === clientSender) return;
       client.receiveMessage(message);
     });
-    console.log(message.replace(/\n+$/, ""));
+    console.log(message.replace(/\n+$/, ''));
   }  
 }
 

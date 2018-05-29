@@ -17,7 +17,7 @@ const compareIssues = (prev, next) => {
   const {0: updated, 1: added} = R.partition(preexisting, getLatest(next));
   const dropped = R.reject(persistent, prev);
   
-  return {added, dropped, updated}
+  return {added, dropped, updated};
 };
 
 module.exports = {
