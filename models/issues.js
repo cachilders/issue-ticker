@@ -62,14 +62,14 @@ const modelJiraIssues = (prevIssues) => {
            */
           const {added, dropped, updated} = compareIssues(prevIssues, issues);
           added.forEach(issue => server.broadcast(
-            `ASSIGNED: ${issue.ticket}`
+            `\nASSIGNED: ${issue.ticket}\n`
           ));
           updated.forEach(issue => server.broadcast(
-            `UPDATED: ${issue.ticket}`
+            `\nUPDATED: ${issue.ticket}\n`
           ));
           dropped.forEach(issue => {
             server.broadcast(
-              `UNASSIGNED: ${issue.ticket}`
+              `\nUNASSIGNED: ${issue.ticket}\n`
             );
             dropIssue(issue);
           });

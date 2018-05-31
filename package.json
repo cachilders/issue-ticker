@@ -7,7 +7,8 @@
     "start": "node index.js",
     "lint": "eslint ./",
     "lint-fix": "eslint ./ --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "zip": "zip deploy/tessellate_core_$(date -u \"+%Y-%m-%dT%H:%M:%S%z\").zip -r * .[^.]* -x */.* *.git* .* *.zip *.csv *.log *.md *.bak *.swp *.txt *.sh"
   },
   "author": "Casey Childers",
   "license": "MIT",
@@ -16,7 +17,8 @@
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
     "pg-promise": "^8.4.4",
-    "ramda": "^0.25.0"
+    "ramda": "^0.25.0",
+    "request": "^2.87.0"
   },
   "devDependencies": {
     "eslint": "^4.19.1"
